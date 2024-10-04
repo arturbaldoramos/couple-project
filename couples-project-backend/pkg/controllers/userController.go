@@ -11,6 +11,21 @@ import (
 
 var validate = validator.New()
 
+func GetUserByUUID(c *gin.Context) {
+	uuid := c.Param("uuid")
+	user := new(models.User)
+
+	// Busca o usuário pelo UUID
+	userResponse, err := user.Read(uuid)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Retorna a resposta do usuário sem a senha
+	c.JSON(http.StatusOK, userResponse)
+}
+
 func CreateUser(c *gin.Context) {
 	user := new(models.User)
 	if err := c.ShouldBindJSON(user); err != nil {
@@ -24,5 +39,11 @@ func CreateUser(c *gin.Context) {
 		return
 	}
 
-	user.Create()
+	if userResponse, err := user.Create(); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	} else {
+		c.JSON(http.StatusCreated, userResponse)
+		return
+	}
 }
